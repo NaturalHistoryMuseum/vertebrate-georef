@@ -21,7 +21,8 @@ ggplot(data = worldmap, aes(x = long, y = lat, group = group)) +
   theme_void() +
   theme(legend.position = c(0.15, 0.3),
         legend.title=element_blank()) + 
-  guides(colour = guide_legend(override.aes = list(size=1)))
+  guides(colour = guide_legend(override.aes = list(size=1),
+                               keyheight = 0.8))
 
 ggsave("outputs/GeoRefSites.png", height = 5, width = 8, 
        units = c("cm"))
