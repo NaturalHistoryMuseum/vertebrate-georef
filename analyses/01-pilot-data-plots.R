@@ -6,7 +6,6 @@ library(ggmap)
 
 # Read in the data
 # This is not yet properly validated and needs some tidying
-# Add caecilian data to this
 amphibians <- read_csv("data/amphibian_data_example.csv")
 glimpse(amphibians)
 
