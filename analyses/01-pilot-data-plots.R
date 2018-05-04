@@ -8,6 +8,7 @@ library(ggmap)
 # This is not yet properly validated and needs some tidying
 # Add caecilian data to this
 amphibians <- read_csv("data/amphibian_data_example.csv")
+glimpse(amphibians)
 
 # Extract world map data
 worldmap <- map_data("world")
@@ -22,7 +23,11 @@ ggplot(data = worldmap, aes(x = long, y = lat, group = group)) +
   theme(legend.position = c(0.15, 0.3),
         legend.title=element_blank()) + 
   guides(colour = guide_legend(override.aes = list(size=1),
-                               keyheight = 0.8))
+                               keyheight = 0.8, keywidth = 0.5))
 
 ggsave("outputs/GeoRefSites.png", height = 5, width = 8, 
        units = c("cm"))
+
+amphibians %>%
+  group_by(Order) %>%
+  summarise(n())
