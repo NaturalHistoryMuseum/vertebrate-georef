@@ -1,4 +1,5 @@
 # Raw data and idiocy prevention#
+iucn-amphibian-maps.Rdata
 *.xlsx
 *.xls
 *.doc
