@@ -1,3 +1,6 @@
+# Large files
+data/CAUDATA/
+
 # Raw data and idiocy prevention#
 iucn-amphibian-maps.Rdata
 *.xlsx
