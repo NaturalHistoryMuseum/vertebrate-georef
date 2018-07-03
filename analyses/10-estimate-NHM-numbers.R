@@ -9,12 +9,7 @@ bird <- read_csv("data/NERC_georef/Birds/occurrence.csv")
 mamm <- read_csv("data/NERC_georef/Mammals/occurrence.csv")
 fish <- read_csv("data/NERC_georef/Fishes/occurrence.csv")
   
-# Select just ZOO specimens
-# Exclude stubs
-# Exclude post 1900
-# Exclude without species names
-# Exclude without locality data
-
+# Summarise the data
 herp %>%
   # Extract dates from registration numbers
   mutate(year = as.numeric(str_extract(herp$RegRegistrationNumber, "\\d{4}"))) %>%
