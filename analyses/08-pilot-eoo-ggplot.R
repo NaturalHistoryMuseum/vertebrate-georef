@@ -21,6 +21,14 @@ make.hull <- function(data){
   data.frame(x = hull$bdry[[1]]$x, y = hull$bdry[[1]]$y)
 }
 
+# Convert SpatialPolygonsDataFrame to dataframe for plotting
+convert.spdf <- function(map) {
+  map@data$id <- rownames(map@data)
+  map.points <- fortify(map, region = "id")
+  map.df <- dplyr::full_join(map.points, map@data, by = "id")
+  return(map.df)
+}
+
 #---------------------------------------------------------------
 # Read in the gbif data
 gbif <- read_csv("data/salamander-gbif.csv")
@@ -39,6 +47,17 @@ maps <- readOGR("data/CAUDATA")
 # Subset maps for the three species
 maps_noto <- subset(maps, maps@data$binomial == "Notophthalmus viridescens")
 maps_tg <- subset(maps, maps@data$binomial == "Taricha granulosa")
+
+# Convert these so they can be plotted in ggplot
+maps_noto.df <- convert.spdf(maps_noto)
+maps_tg.df <- convert.spdf(maps_tg)
+
+# Quick simplification of map polygons
+maps_noto.df <- maps_noto.df %>%
+filter(piece == 1)
+
+maps_tg.df <- maps_tg.df %>%
+filter(piece == 1)
 
 # Make individual species datasets for hulls
 gbif_noto <- gbif %>%
@@ -64,13 +83,23 @@ ggplot(data = usamap, aes(x = long, y = lat, group = group)) +
   geom_point(data = gbif_two, aes(x = decimallongitude, y = decimallatitude, 
                                    group = NA, shape = species, color = species), 
                                    alpha = 0.9) +
+  geom_polygon(data = mx, fill = NA, col = "black", alpha = 0.1, linetype = "dashed") +
+  geom_polygon(data = maps_tg.df, fill = NA, col = "black", alpha = 0.1, linetype = "dashed") +
   scale_colour_manual(values = c(viridis(4)[1:3])) +
   theme_void() +
-  theme(legend.position = c(0.35, 0.7),
+  theme(legend.position = c(0.3, 0.7),
         legend.title = element_blank(),
         legend.text = element_text(face = "italic")) + 
  guides(colour = guide_legend(override.aes = list(size = 2),
                               keyheight = 0.8, keywidth = 0.5))
 
-ggsave("outputs/convex-hulls.png", height = 5, width = 8, 
+ggsave("outputs/convex-hulls-maps.png", height = 5, width = 8, 
        units = c("cm"))
+
+?geom_polygon
+
+mz <- filter(maps_tg.df, piece == 1)
+
+ggplot(data = usamap, aes(x = long, y = lat, group = group)) + 
+  geom_polygon(fill = NA, col = "black", size = 0.5) +
+  geom_polygon(data = mz, alpha = 0.1, linetype = "dashed", col = "black", fill = NA)
