@@ -83,8 +83,8 @@ ggplot(data = usamap, aes(x = long, y = lat, group = group)) +
   geom_point(data = gbif_two, aes(x = decimallongitude, y = decimallatitude, 
                                    group = NA, shape = species, color = species), 
                                    alpha = 0.9) +
-  geom_polygon(data = maps_noto.df, fill = NA, col = "black", alpha = 0.1, linetype = "dashed") +
-  geom_polygon(data = maps_tg.df, fill = NA, col = "black", alpha = 0.1, linetype = "dashed") +
+  geom_polygon(data = maps_noto.df, fill = NA, col = "black", linetype = "dotted") +
+  geom_polygon(data = maps_tg.df, fill = NA, col = "black", linetype = "dotted") +
   scale_colour_manual(values = c(viridis(4)[1:3])) +
   theme_void() +
   theme(legend.position = c(0.3, 0.7),
