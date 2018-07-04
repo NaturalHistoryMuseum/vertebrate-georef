@@ -83,7 +83,7 @@ ggplot(data = usamap, aes(x = long, y = lat, group = group)) +
   geom_point(data = gbif_two, aes(x = decimallongitude, y = decimallatitude, 
                                    group = NA, shape = species, color = species), 
                                    alpha = 0.9) +
-  geom_polygon(data = mx, fill = NA, col = "black", alpha = 0.1, linetype = "dashed") +
+  geom_polygon(data = maps_noto.df, fill = NA, col = "black", alpha = 0.1, linetype = "dashed") +
   geom_polygon(data = maps_tg.df, fill = NA, col = "black", alpha = 0.1, linetype = "dashed") +
   scale_colour_manual(values = c(viridis(4)[1:3])) +
   theme_void() +
@@ -95,11 +95,3 @@ ggplot(data = usamap, aes(x = long, y = lat, group = group)) +
 
 ggsave("outputs/convex-hulls-maps.png", height = 5, width = 8, 
        units = c("cm"))
-
-?geom_polygon
-
-mz <- filter(maps_tg.df, piece == 1)
-
-ggplot(data = usamap, aes(x = long, y = lat, group = group)) + 
-  geom_polygon(fill = NA, col = "black", size = 0.5) +
-  geom_polygon(data = mz, alpha = 0.1, linetype = "dashed", col = "black", fill = NA)
