@@ -1,5 +1,7 @@
 # Large files
 data/CAUDATA/
+data/ANURA/
+data/all-gbif.csv
 
 # Raw data and idiocy prevention#
 iucn-amphibian-maps.Rdata
