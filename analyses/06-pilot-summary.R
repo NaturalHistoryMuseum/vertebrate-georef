@@ -18,4 +18,3 @@ gbif %>%
 gbif %>%
   group_by(class) %>%
   summarise(length(unique(species)))
-
