@@ -1,3 +1,6 @@
+# Extract summary data from GBIF records
+# to put into Table 1 in the proposal
+
 # Read in all gbif records
 gbif <- read_csv("data/all-gbif.csv")
 glimpse(gbif)
