@@ -1,5 +1,6 @@
 # Pilot analyses on amphibian data
-# Getting the overlaps
+# Getting the overlaps of GBIF salamanders
+# to add numbers to text of proposal
 
 # Load libraries
 library(dplyr)
