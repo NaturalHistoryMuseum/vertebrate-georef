@@ -1,4 +1,5 @@
 # Extracting convex hulls from GBIF data
+# and plotting to make Figure 2 in the proposal
 # Natalie Cooper
 # July 2018
 #---------------------------------------------------------------
