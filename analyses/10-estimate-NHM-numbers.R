@@ -1,5 +1,7 @@
-# Estimating numbers from NHM 
+# Estimating numbers from NHM data portal datasets
+# to add to Table 1 in the proposal
 
+# Load libraries
 library(tidyverse)
 library(readxl)
 
@@ -9,7 +11,7 @@ bird <- read_csv("data/NERC_georef/Birds/occurrence.csv")
 mamm <- read_csv("data/NERC_georef/Mammals/occurrence.csv")
 fish <- read_csv("data/NERC_georef/Fishes/occurrence.csv")
   
-# Summarise the data
+# Summarise the data for each class separately
 herp %>%
   # Extract dates from registration numbers
   mutate(year = as.numeric(str_extract(herp$RegRegistrationNumber, "\\d{4}"))) %>%
