@@ -1,5 +1,6 @@
 # Pilot analyses on amphibian data
-# Getting the overlaps
+# Getting the overlaps overall using MSc data
+# Numbers to be added to proposal text
 
 # Load libraries
 library(dplyr)
@@ -11,10 +12,9 @@ library(rworldmap)
 library(rgeos)
 
 #---------------------------------------------
-# Read in maps and check projection is latlong
-# Name of this = maps
+# Read in maps 
 #----------------------------------------------
-load("data/iucn-amphibian-maps.Rdata")
+maps <- readOGR("data/AMPHIBIANS")
 
 #--------------------------------------------------------
 # Read in locality data and convert to spatial dataframe
@@ -104,6 +104,6 @@ summarise(group_by(new_ds, Order),
           totaloverlaps = sum(NumberOverlaps),
           meanpercentoverlap = mean(PercentOverlaps))
 
-# Finally you might want to save this dataset so you can use it in your analyses!
+# Finally save this dataset in case needed
 write_csv(path = "outputs/overlapsdata.csv", new_ds)
 
