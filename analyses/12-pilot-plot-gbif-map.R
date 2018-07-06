@@ -1,4 +1,7 @@
 # Plot the GBIF records
+# to make Figure 3 for proposal
+
+# Load libraries
 library(tidyverse)
 library(viridis)
 
@@ -31,14 +34,17 @@ glimpse(gbif)
 worldmap <- map_data("world")
 ggplot(data = worldmap, aes(x = long, y = lat, group = group)) + 
   geom_polygon(fill = NA, col = "black", size = 0.5) +
+  # Add points with colour as clade
   geom_point(data = gbif, aes(x = decimallongitude, y = decimallatitude, 
                               group = NA, colour = clade), size = 0.25, alpha = 0.8, pch = 16) +
   scale_colour_manual(values = c(viridis(5))) +
   theme_void() +
+  # Legend manipulations
   theme(legend.position = "top",
         legend.title = element_blank()) +
   guides(colour = guide_legend(keyheight = 0.8, keywidth = 0.5,
                                override.aes = list(size = 2)))
 
+# Save figure
 ggsave("outputs/all-gbif-map.png", height = 5, width = 8, 
        units = c("cm"))
