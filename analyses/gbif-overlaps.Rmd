@@ -194,15 +194,15 @@ dsSPDF_mammal <- SpatialPointsDataFrame(gbif3_mammal[, c(10,11)],
 
 # Create arrays for results
 overlaps_amphibian <- array(NA, dim = c(length(unique(dsSPDF_amphibian@data$binomial)), 4))
-colnames(overlaps_amphibian) <- c("Binomial", "NumberTypes", "NumberOverlaps", "PercentOverlaps")
+colnames(overlaps_amphibian) <- c("Binomial", "NumberSpecimens", "NumberOverlaps", "PercentOverlaps")
 overlaps_amphibian <- data.frame(overlaps_amphibian)
 
 overlaps_bird <- array(NA, dim = c(length(unique(dsSPDF_bird@data$binomial)), 4))
-colnames(overlaps_bird) <- c("Binomial", "NumberTypes", "NumberOverlaps", "PercentOverlaps")
+colnames(overlaps_bird) <- c("Binomial", "NumberSpecimens", "NumberOverlaps", "PercentOverlaps")
 overlaps_bird <- data.frame(overlaps_bird)
 
 overlaps_mammal <- array(NA, dim = c(length(unique(dsSPDF_mammal@data$binomial)), 4))
-colnames(overlaps_mammal) <- c("Binomial", "NumberTypes", "NumberOverlaps", "PercentOverlaps")
+colnames(overlaps_mammal) <- c("Binomial", "NumberSpecimens", "NumberOverlaps", "PercentOverlaps")
 overlaps_mammal <- data.frame(overlaps_mammal)
 
 # Loop through for each species
@@ -210,7 +210,7 @@ for (i in 1:length(unique(dsSPDF_amphibian@data$binomial))) {
   
   # Which species is species i?
   species_i <- as.character(unique(dsSPDF_amphibian@data$binomial)[i])
-  # How many Types do we have for that species?
+  # How many Specimens do we have for that species?
   no_types <- length(which(dsSPDF_amphibian@data$binomial == species_i))
   # Subset locality data so we just have locality for species i
   locality_i <- subset(dsSPDF_amphibian, dsSPDF_amphibian@data$binomial == species_i)
@@ -223,19 +223,21 @@ for (i in 1:length(unique(dsSPDF_amphibian@data$binomial))) {
   # I have added the number and % of overlaps as some
   # species have > 1 type
   overlaps_amphibian[i, "Binomial"] <- species_i
-  overlaps_amphibian[i, "NumberTypes"] <- no_types
+  overlaps_amphibian[i, "NumberSpecimens"] <- no_types
   overlaps_amphibian[i, "NumberOverlaps"] <- no_overlaps
   overlaps_amphibian[i, "PercentOverlaps"] <- (no_overlaps/no_types) * 100
   
 } # end loop
+```
 
+```{r, eval = FALSE}
 # Birds
 # Loop through for each species
 for (i in 1:length(unique(dsSPDF_bird@data$binomial))) {
   
   # Which species is species i?
   species_i <- as.character(unique(dsSPDF_bird@data$binomial)[i])
-  # How many Types do we have for that species?
+  # How many Specimens do we have for that species?
   no_types <- length(which(dsSPDF_bird@data$binomial == species_i))
   # Subset locality data so we just have locality for species i
   locality_i <- subset(dsSPDF_bird, dsSPDF_bird@data$binomial == species_i)
@@ -248,18 +250,20 @@ for (i in 1:length(unique(dsSPDF_bird@data$binomial))) {
   # I have added the number and % of overlaps as some
   # species have > 1 type
   overlaps_bird[i, "Binomial"] <- species_i
-  overlaps_bird[i, "NumberTypes"] <- no_types
+  overlaps_bird[i, "NumberSpecimens"] <- no_types
   overlaps_bird[i, "NumberOverlaps"] <- no_overlaps
   overlaps_bird[i, "PercentOverlaps"] <- (no_overlaps/no_types) * 100
   
 } # end loop
+```
 
+```{r}
 # Loop through for each species
 for (i in 1:length(unique(dsSPDF_mammal@data$binomial))) {
   
   # Which species is species i?
   species_i <- as.character(unique(dsSPDF_mammal@data$binomial)[i])
-  # How many Types do we have for that species?
+  # How many Specimens do we have for that species?
   no_types <- length(which(dsSPDF_mammal@data$binomial == species_i))
   # Subset locality data so we just have locality for species i
   locality_i <- subset(dsSPDF_mammal, dsSPDF_mammal@data$binomial == species_i)
@@ -272,19 +276,80 @@ for (i in 1:length(unique(dsSPDF_mammal@data$binomial))) {
   # I have added the number and % of overlaps as some
   # species have > 1 type
   overlaps_mammal[i, "Binomial"] <- species_i
-  overlaps_mammal[i, "NumberTypes"] <- no_types
+  overlaps_mammal[i, "NumberSpecimens"] <- no_types
   overlaps_mammal[i, "NumberOverlaps"] <- no_overlaps
   overlaps_mammal[i, "PercentOverlaps"] <- (no_overlaps/no_types) * 100
   
 } # end loop
 
+```
+
+```{r}
 # Look at the output
 overlaps_amphibian
-overlaps_bird
+#overlaps_bird
 overlaps_mammal
 
 # Save output
 write_csv(overlaps_amphibian, file = here("data/overlaps_amphibian"))
-write_csv(overlaps_bird, file = here("data/overlaps_bird"))
+#write_csv(overlaps_bird, file = here("data/overlaps_bird"))
 write_csv(overlaps_mammal, file = here("data/overlaps_mammal"))
 ```
+
+
+```{r}
+# Loop to extract area of overlap
+# Will write functions for this at some stage
+
+# Create arrays for results
+areas_amphibian <- array(NA, dim = c(length(unique(dsSPDF_amphibian@data$binomial)), 4))
+colnames(areas_amphibian) <- c("Binomial", "AreaHull", "AreaOverlaps", "PercentOverlaps")
+areas_amphibian <- data.frame(areas_amphibian)
+
+areas_bird <- array(NA, dim = c(length(unique(dsSPDF_bird@data$binomial)), 4))
+colnames(areas_bird) <- c("Binomial", "AreaHull", "AreaOverlaps", "PercentOverlaps")
+areas_bird <- data.frame(areas_bird)
+
+areas_mammal <- array(NA, dim = c(length(unique(dsSPDF_mammal@data$binomial)), 4))
+colnames(areas_mammal) <- c("Binomial", "AreaHull", "AreaOverlaps", "PercentOverlaps")
+areas_mammal <- data.frame(areas_mammal)
+
+# Loop through for each species
+for (i in 1:length(unique(dsSPDF_amphibian@data$binomial))) {
+  
+  # Which species is species i?
+  species_i <- as.character(unique(dsSPDF_amphibian@data$binomial)[i])
+  # Select hull for species_i
+  hull_i <- hull_species_amphibian[[species_i]]
+  
+  # What is the area of species i hull
+  area_hull <- 
+  
+  # Subset map data so we just have map for species i
+  map_i <- subset(maps_amphibian, maps_amphibian$binomial == species_i)
+  
+  
+  intersect(map_i, hull_i)
+  
+  # Outputs
+  # I have added the number and % of areas as some
+  # species have > 1 type
+  areas_amphibian[i, "Binomial"] <- species_i
+  areas_amphibian[i, "AreaHull"] <- area_hull
+  areas_amphibian[i, "AreaOverlaps"] <- no_areas
+  areas_amphibian[i, "PercentOverlaps"] <- (no_areas/no_types) * 100
+  
+} # end loop
+
+# Look at the output
+areas_amphibian
+areas_bird
+areas_mammal
+
+# Save output
+write_csv(areas_amphibian, file = here("data/areas_amphibian"))
+write_csv(areas_bird, file = here("data/areas_bird"))
+write_csv(areas_mammal, file = here("data/areas_mammal"))
+```
+
+
