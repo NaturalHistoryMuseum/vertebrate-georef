@@ -103,8 +103,8 @@ rm(gbif)
 
 ```{r}
 # Read in maps
-maps_amphibian <- readOGR("data/AMPHIBIANS")
-maps_mammal <- readOGR("data/MAMMALS")
+maps_amphibian <- readOGR(here("data/AMPHIBIANS"))
+maps_mammal <- readOGR(here("data/MAMMALS"))
 #maps_bird <- readOGR("data/BIRDS")
 ```
 
