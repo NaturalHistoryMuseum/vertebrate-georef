@@ -280,6 +280,7 @@ for (i in z) { # need to skip the ones with no map
 } # end loop
 
 write_csv(areas_amphibian, path = here("data/areas_amphibian.csv"))
+
 #-----------------------------------
 # Birds
 areas_bird <- array(NA, dim = c(length(unique(dsSPDF_bird@data$binomial)), 4))
@@ -357,17 +358,9 @@ for (i in z) { # need to skip the ones with no map
 
 write_csv(areas_mammal, path = here("data/areas_mammal.csv"))
 
-
-
-
-
-
-
-```
-
-```{r}
+#--------------------------------------------------------------------------
 # To check intersect works, pick one species and plot map, hull and overlap
-i <- 1
+i <- 1 # Notophthalmus
 species_i <- as.character(unique(dsSPDF_amphibian@data$binomial)[i])
 hull_i <- hull_species_amphibian[[species_i]]
 hull_poly_i <- SpatialPolygons(list(Polygons(list(Polygon(hull_i)), ID=1)))
@@ -392,5 +385,3 @@ ggplot(data = world, aes(x = long, y = lat, group = group)) +
   geom_polygon(data = poly_overlap_i2, aes(x = long, y = lat, group = NULL), fill = "blue") +
   geom_point(data = gbif3_amphibian[gbif3_amphibian$binomial == species_i, ],
              aes(x = decimallongitude, y = decimallatitude, group = NULL))
-```
-
