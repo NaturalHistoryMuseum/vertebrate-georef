@@ -146,8 +146,14 @@ overlaps_amphibian <- array(NA, dim = c(length(unique(dsSPDF_amphibian@data$bino
 colnames(overlaps_amphibian) <- c("Binomial", "NumberSpecimens", "NumberOverlaps", "PercentOverlaps")
 overlaps_amphibian <- data.frame(overlaps_amphibian)
 
-# Loop through for each species
-for (i in 1:length(unique(dsSPDF_amphibian@data$binomial))) {
+# Need to skip the ones with no map
+# Get species that have matching species maps
+# Then get numbers to put into the loop
+z <- unique(gbif3_amphibian$binomial) %in% maps_amphibian@data$binomial
+x <- 1:length(unique(dsSPDF_amphibian@data$binomial))
+
+# Loop through species with maps
+for (i in x[z == TRUE]) {
   
   # Which species is species i?
   species_i <- as.character(unique(dsSPDF_amphibian@data$binomial)[i])
@@ -179,8 +185,11 @@ overlaps_bird <- array(NA, dim = c(length(unique(dsSPDF_bird@data$binomial)), 4)
 colnames(overlaps_bird) <- c("Binomial", "NumberSpecimens", "NumberOverlaps", "PercentOverlaps")
 overlaps_bird <- data.frame(overlaps_bird)
 
-# Loop through for each species
-for (i in 1:length(unique(dsSPDF_bird@data$binomial))) {
+z <- unique(gbif3_bird$binomial) %in% maps_bird@data$binomial
+x <- 1:length(unique(dsSPDF_bird@data$binomial))
+
+# Loop through species with maps
+for (i in x[z == TRUE]) {
   
   # Which species is species i?
   species_i <- as.character(unique(dsSPDF_bird@data$binomial)[i])
@@ -210,8 +219,11 @@ overlaps_mammal <- array(NA, dim = c(length(unique(dsSPDF_mammal@data$binomial))
 colnames(overlaps_mammal) <- c("Binomial", "NumberSpecimens", "NumberOverlaps", "PercentOverlaps")
 overlaps_mammal <- data.frame(overlaps_mammal)
 
-# Loop through for each species
-for (i in 1:length(unique(dsSPDF_mammal@data$binomial))) {
+z <- unique(gbif3_mammal$binomial) %in% maps_mammal@data$binomial
+x <- 1:length(unique(dsSPDF_mammal@data$binomial))
+
+# Loop through species with maps
+for (i in x[z == TRUE]) {
   
   # Which species is species i?
   species_i <- as.character(unique(dsSPDF_mammal@data$binomial)[i])
