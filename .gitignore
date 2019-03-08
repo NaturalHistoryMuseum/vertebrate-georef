@@ -2,6 +2,8 @@
 data/CAUDATA/
 data/ANURA/
 data/all-gbif.csv
+data/tidy-gbif.csv
+data/NERC_georef/
 
 # Raw data and idiocy prevention#
 iucn-amphibian-maps.Rdata
@@ -10,6 +12,7 @@ iucn-amphibian-maps.Rdata
 *.doc
 *.docx
 *.pptx
+*.html
 
 # Compiled source #
 *.com
