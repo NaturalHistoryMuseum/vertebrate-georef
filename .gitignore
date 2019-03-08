@@ -1,6 +1,6 @@
 # Large files
-data/CAUDATA/
-data/ANURA/
+data/AMPHIBIANS/
+data/MAMMALS/
 data/all-gbif.csv
 data/tidy-gbif.csv
 data/NERC_georef/
