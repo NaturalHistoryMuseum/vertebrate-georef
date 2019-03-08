@@ -51,7 +51,7 @@ gbif <- read_csv(here("data/tidy-gbif.csv"))
 # This takes a long time and a lot of memory so I 
 # recommend doing one clade at a time
 
-#maps_amphibian <- readOGR(here("data/AMPHIBIANS"))
+maps_amphibian <- readOGR(here("data/AMPHIBIANS"))
 #maps_mammal <- readOGR(here("data/MAMMALS"))
 #maps_bird <- readOGR("data/BIRDS")
 
@@ -248,9 +248,14 @@ areas_amphibian <- array(NA, dim = c(length(unique(dsSPDF_amphibian@data$binomia
 colnames(areas_amphibian) <- c("Binomial", "AreaHull", "AreaOverlaps", "PercentOverlaps")
 areas_amphibian <- data.frame(areas_amphibian)
 
-z <- 
+# Need to skip the ones with no map
+# Get species that have matching species maps
+# Then get numbers to put into the loop
+z <- unique(gbif3_amphibian$binomial) %in% maps_amphibian@data$binomial
+x <- 1:length(unique(dsSPDF_amphibian@data$binomial))
 
-for (i in z) { # need to skip the ones with no map
+# Loop through species with maps
+for (i in x[z == TRUE]) { 
   
   # Which species is species i?
   species_i <- as.character(unique(dsSPDF_amphibian@data$binomial)[i])
@@ -287,7 +292,11 @@ areas_bird <- array(NA, dim = c(length(unique(dsSPDF_bird@data$binomial)), 4))
 colnames(areas_bird) <- c("Binomial", "AreaHull", "AreaOverlaps", "PercentOverlaps")
 areas_bird <- data.frame(areas_bird)
 
-for (i in z) { # need to skip the ones with no map
+z <- unique(gbif3_bird$binomial) %in% maps_bird@data$binomial
+x <- 1:length(unique(dsSPDF_bird@data$binomial))
+
+# Loop through species with maps
+for (i in x[z == TRUE]) { 
   
   # Which species is species i?
   species_i <- as.character(unique(dsSPDF_bird@data$binomial)[i])
@@ -324,10 +333,11 @@ areas_mammal <- array(NA, dim = c(length(unique(dsSPDF_mammal@data$binomial)), 4
 colnames(areas_mammal) <- c("Binomial", "AreaHull", "AreaOverlaps", "PercentOverlaps")
 areas_mammal <- data.frame(areas_mammal)
 
-z <- 
+z <- unique(gbif3_mammal$binomial) %in% maps_mammal@data$binomial
+x <- 1:length(unique(dsSPDF_mammal@data$binomial))
 
-# Loop through for each species
-for (i in z) { # need to skip the ones with no map
+# Loop through species with maps
+for (i in x[z == TRUE]) { 
   
   # Which species is species i?
   species_i <- as.character(unique(dsSPDF_mammal@data$binomial)[i])
