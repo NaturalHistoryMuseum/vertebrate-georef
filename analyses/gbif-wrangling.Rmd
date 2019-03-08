@@ -167,7 +167,7 @@ specimen3 <-
 gbif3 <- gbif2[gbif2$binomial %in% specimen3$binomial, ]
 ```
 
-```{r, echo = FALSE, warning = FALSE}
+```{r, echo = FALSE, warning = FALSE, message = FALSE}
 # Select world map
 world <- map_data("world")
 ```
