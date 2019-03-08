@@ -5,7 +5,7 @@ date: "7 March 2019"
 output: html_document
 ---
 
-```{r, echo = FALSE, message = FALSE}
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
 # Load libraries
 library(tidyverse)
 library(viridis)
@@ -44,7 +44,7 @@ convert.spdf <- function(map) {
 ```
 
 First we need to wrangle the GBIF data so only specimens with lat longs and full species names are included, we also add a "clade" variable to deal with fishes being in different classes.
-```{r, echo = FALSE, message = FALSE}
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
 # Read in the GBIF data
 gbif <- read_csv(here("data/all-gbif.csv"))
 
@@ -99,6 +99,9 @@ gbif2 <-
 
 # Remove gbif
 rm(gbif)
+
+# Write out tidy gbif data
+write_csv(gbif2, path = here("data/tidy-gbif.csv"))
 ```
 
 ## What data are available in GBIF?
@@ -110,6 +113,7 @@ sum_clade <- gbif2 %>%
 
 kable(sum_clade)
 ```
+
 What about with more than 3 specimens?
 ```{r, echo = FALSE}
 sum_clade <- gbif2 %>%
@@ -133,7 +137,7 @@ sum_clade3 <- gbif2 %>%
 kable(sum_clade3)
 ```
 
-What about with 10 or more specimens per species?
+What about with 10 or more specimens per species with distinct locality data?
 ```{r, echo = FALSE}
 sum_clade10 <- gbif2 %>%
      distinct(clade, binomial, decimallongitude, decimallatitude) %>%
@@ -147,21 +151,23 @@ kable(sum_clade10)
 ```
 
 
-## Plot of all specimens where there are > 10 unique localities
+## Maps of specimen distributions
+
+All specimens where there are >= 3 unique localities
 ```{r, echo = FALSE}
-# First find only those species with >= 10 specimens
-specimen10 <- 
+# First find only those species with >= 3 specimens
+specimen3 <- 
   gbif2 %>%
   distinct(binomial, decimallongitude, decimallatitude) %>%
   group_by(binomial) %>%
   summarise(n = n()) %>%
-  filter(n >= 10)
+  filter(n >= 3)
 
 # Then select these specimens from the gbif data
-gbif10 <- gbif2[gbif2$binomial %in% specimen10$binomial, ]
+gbif3 <- gbif2[gbif2$binomial %in% specimen3$binomial, ]
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning = FALSE}
 # Select world map
 world <- map_data("world")
 ```
@@ -169,75 +175,78 @@ world <- map_data("world")
 ```{r, echo = FALSE}
 ggplot(data = world, aes(x = long, y = lat, group = group)) + 
   geom_polygon(fill = NA, col = "black", size = 0.5) +
-  #geom_polygon(data = hull_noto, aes(x = x, y = y, group = NULL), alpha = 0.2) +
-  #geom_polygon(data = hull_tg, aes(x = x, y = y, group = NULL), alpha = 0.2) +
-  geom_point(data = gbif10, aes(x = decimallongitude, y = decimallatitude, 
+  geom_point(data = gbif3, aes(x = decimallongitude, y = decimallatitude, 
                                   group = NA, color = binomial), alpha = 0.9) +
   facet_wrap( ~ clade) +
   theme_void() +
   theme(legend.position = "none")
 ```
 
-```{r, echo = FALSE}
-# Create convex hulls for all species with >= 10 unique localities
-hull_species <- list()
-                              
-for(i in 1:length(unique(gbif10$binomial))){
-  hull_species[[i]] <- make.hull(gbif10[gbif10$binomial == unique(gbif10$binomial)[i], ])
-}
+How are these spread across time?
 
-# Add species names
-names(hull_species) <- unique(gbif10$binomial)
-```
-
-## Amphibians
-```{r, echo = FALSE}
-# Get amphibians for a test run
-sp <- gbif10 %>%
-  filter(clade == "Amphibians") %>%
-  pull(binomial) %>%
-  unique()
-  
-ggplot(data = world, aes(x = long, y = lat, group = group)) + 
-  geom_polygon(fill = NA, col = "black", size = 0.5) +
-  geom_polygon(data = hull_species[["Taricha granulosa"]], aes(x = x, y = y, group = NULL), 
-              col = viridis(8)[2], fill = NA) +
-  geom_polygon(data = hull_species[["Notophthalmus viridescens"]], aes(x = x, y = y, group = NULL),                  col = viridis(8)[3], fill = NA) +
-  geom_polygon(data = hull_species[["Taricha torosa"]], aes(x = x, y = y, group = NULL),                             col = viridis(8)[4], fill = NA) +
-  geom_polygon(data = hull_species[["Anaxyrus boreas"]], aes(x = x, y = y, group = NULL),                            col = viridis(8)[5], fill = NA) +
-  geom_polygon(data = hull_species[["Pelophylax esculentus"]], aes(x = x, y = y, group = NULL),                      col = viridis(8)[6], fill = NA) +
-  theme_void() 
-```
-
-## Mammals
-```{r, echo = FALSE}
-# Get amphibians for a test run
-sp <- gbif10 %>%
-  filter(clade == "Mammals") %>%
-  pull(binomial) %>%
-  unique()
-  
-ggplot(data = world, aes(x = long, y = lat, group = group)) + 
-  geom_polygon(fill = NA, col = "black", size = 0.5) +
-  geom_polygon(data = hull_species[["Taricha granulosa"]], aes(x = x, y = y, group = NULL), 
-              col = viridis(8)[2], fill = NA) +
-  geom_polygon(data = hull_species[["Notophthalmus viridescens"]], aes(x = x, y = y, group = NULL),                  col = viridis(8)[3], fill = NA) +
-  geom_polygon(data = hull_species[["Taricha torosa"]], aes(x = x, y = y, group = NULL),                             col = viridis(8)[4], fill = NA) +
-  geom_polygon(data = hull_species[["Anaxyrus boreas"]], aes(x = x, y = y, group = NULL),                            col = viridis(8)[5], fill = NA) +
-  geom_polygon(data = hull_species[["Pelophylax esculentus"]], aes(x = x, y = y, group = NULL),                      col = viridis(8)[6], fill = NA) +
-  theme_void() +
-  theme(legend.position = "none")
-```
-
-How about through time?
+Just for birds as they swamp the data
 ```{r, echo = FALSE}
 ggplot(data = world, aes(x = long, y = lat, group = group)) + 
   geom_polygon(fill = NA, col = "black", size = 0.5) +
-  #geom_polygon(data = hull_noto, aes(x = x, y = y, group = NULL), alpha = 0.2) +
-  #geom_polygon(data = hull_tg, aes(x = x, y = y, group = NULL), alpha = 0.2) +
-  geom_point(data = gbif10, aes(x = decimallongitude, y = decimallatitude, 
-                                  group = NA, color = binomial), alpha = 0.9) +
+  geom_point(data = gbif3[gbif3$clade == "Birds", ], aes(x = decimallongitude, y = decimallatitude, 
+                                  group = NA, color = binomial), alpha = 0.5) +
   facet_wrap( ~ decade) +
   theme_void() +
   theme(legend.position = "none")
 ```
+
+And for all the non birds
+```{r, echo = FALSE}
+ggplot(data = world, aes(x = long, y = lat, group = group)) + 
+  geom_polygon(fill = NA, col = "black", size = 0.5) +
+  geom_point(data = gbif3[gbif3$clade != "Birds", ], aes(x = decimallongitude, y = decimallatitude, 
+                                  group = NA, color = clade), alpha = 0.5) +
+  facet_wrap( ~ decade) +
+  theme_void() +
+  theme(legend.position = "top",
+        legend.title = element_blank())
+```
+
+## Convex hulls
+
+```{r, echo = FALSE}
+# Create convex hulls for all species with >= 3 unique localities
+hull_species <- list()
+                              
+for(i in 1:length(unique(gbif3$binomial))){
+  hull_species[[i]] <- make.hull(gbif3[gbif3$binomial == unique(gbif3$binomial)[i], ])
+}
+
+# Add species names
+names(hull_species) <- unique(gbif3$binomial)
+```
+
+Amphibians only, for all species with >= 3 unique localities (13 species)
+```{r, echo = FALSE}
+# Get amphibians species involved
+gbif3 %>%
+  filter(clade == "Amphibians") %>%
+  pull(binomial) %>%
+  unique()
+```
+
+```{r, echo = FALSE}
+ggplot(data = world, aes(x = long, y = lat, group = group)) + 
+  geom_polygon(fill = NA, col = "black", size = 0.5) +
+  geom_polygon(data = hull_species[["Taricha granulosa"]], aes(x = x, y = y, group = NULL), 
+              col = viridis(8)[13], fill = NA) +
+  geom_polygon(data = hull_species[["Notophthalmus viridescens"]], aes(x = x, y = y, group = NULL),                  col = viridis(13)[1], fill = NA) +
+  geom_polygon(data = hull_species[["Taricha torosa"]], aes(x = x, y = y, group = NULL),                             col = viridis(8)[2], fill = NA) +
+  geom_polygon(data = hull_species[["Anaxyrus boreas"]], aes(x = x, y = y, group = NULL),                            col = viridis(8)[3], fill = NA) +
+  geom_polygon(data = hull_species[["Pelophylax esculentus"]], aes(x = x, y = y, group = NULL),                      col = viridis(8)[4], fill = NA) +
+  geom_polygon(data = hull_species[["Eurycea longicauda"]], aes(x = x, y = y, group = NULL),                      col = viridis(8)[5], fill = NA) +
+  geom_polygon(data = hull_species[["Anaxyrus americanus"]], aes(x = x, y = y, group = NULL),                      col = viridis(8)[6], fill = NA) +
+  geom_polygon(data = hull_species[["Aneides niger"]], aes(x = x, y = y, group = NULL),                      col = viridis(8)[7], fill = NA) +
+  geom_polygon(data = hull_species[["Eurycea bislineata"]], aes(x = x, y = y, group = NULL),                      col = viridis(8)[8], fill = NA) +
+  geom_polygon(data = hull_species[["Hyla arborea"]], aes(x = x, y = y, group = NULL),                      col = viridis(8)[9], fill = NA) +
+  geom_polygon(data = hull_species[["Desmognathus fuscus"]], aes(x = x, y = y, group = NULL),                      col = viridis(8)[10], fill = NA) +
+  geom_polygon(data = hull_species[["Pseudotriton ruber"]], aes(x = x, y = y, group = NULL),                      col = viridis(8)[11], fill = NA) +
+  geom_polygon(data = hull_species[["Necturus maculosus"]], aes(x = x, y = y, group = NULL),                      col = viridis(8)[12], fill = NA) +
+  theme_void() 
+```
+
