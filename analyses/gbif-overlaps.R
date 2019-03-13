@@ -19,6 +19,7 @@ library(spatstat)
 library(ggmap)
 library(here)
 library(ggspatial)
+library(geosphere)
 
 # Short function to get decades
 floor_decade <- function(x){
