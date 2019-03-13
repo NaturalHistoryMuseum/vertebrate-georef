@@ -1,6 +1,7 @@
 # Large files
 data/AMPHIBIANS/
 data/MAMMALS/
+data/BOTW/
 data/all-gbif.csv
 data/tidy-gbif.csv
 data/NERC_georef/
