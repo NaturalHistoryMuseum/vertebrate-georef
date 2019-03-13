@@ -185,7 +185,7 @@ overlaps_bird <- array(NA, dim = c(length(unique(dsSPDF_bird@data$binomial)), 4)
 colnames(overlaps_bird) <- c("Binomial", "NumberSpecimens", "NumberOverlaps", "PercentOverlaps")
 overlaps_bird <- data.frame(overlaps_bird)
 
-z <- unique(gbif3_bird$binomial) %in% maps_bird@data$binomial
+z <- unique(gbif3_bird$binomial) %in% maps_bird@data$SCINAME
 x <- 1:length(unique(dsSPDF_bird@data$binomial))
 
 # Loop through species with maps
@@ -198,7 +198,7 @@ for (i in x[z == TRUE]) {
   # Subset locality data so we just have locality for species i
   locality_i <- subset(dsSPDF_bird, dsSPDF_bird@data$binomial == species_i)
   # Subset map data so we just have map for species i
-  map_i <- subset(maps_bird, maps_bird$binomial == species_i)
+  map_i <- subset(maps_bird, maps_bird$SCINAME == species_i)
   # How many of the Type localities overlap with range polygons?
   no_overlaps <- sum(!is.na(over(locality_i, as(map_i, "SpatialPolygons"))))
   
@@ -305,7 +305,7 @@ areas_bird <- array(NA, dim = c(length(unique(dsSPDF_bird@data$binomial)), 4))
 colnames(areas_bird) <- c("Binomial", "AreaHull", "AreaOverlaps", "PercentOverlaps")
 areas_bird <- data.frame(areas_bird)
 
-z <- unique(gbif3_bird$binomial) %in% maps_bird@data$binomial
+z <- unique(gbif3_bird$binomial) %in% maps_bird@data$SCINAME
 x <- 1:length(unique(dsSPDF_bird@data$binomial))
 
 # Loop through species with maps
@@ -319,7 +319,7 @@ for (i in x[z == TRUE]) {
   hull_poly_i <- SpatialPolygons(list(Polygons(list(Polygon(hull_i)), ID=1)))
   
   # Subset map data so we just have map for species i
-  map_i <- subset(maps_bird, maps_bird$binomial == species_i)
+  map_i <- subset(maps_bird, maps_bird$SCINAME == species_i)
   # Get intersection of map and hull
   poly_overlap_i <- raster::intersect(map_i, hull_poly_i)
   
