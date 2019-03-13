@@ -51,9 +51,9 @@ gbif <- read_csv(here("data/tidy-gbif.csv"))
 # This takes a long time and a lot of memory so I 
 # recommend doing one clade at a time
 
-maps_amphibian <- readOGR(here("data/AMPHIBIANS"))
+#maps_amphibian <- readOGR(here("data/AMPHIBIANS"))
 #maps_mammal <- readOGR(here("data/MAMMALS"))
-#maps_bird <- readOGR("data/BIRDS")
+#maps_bird <- readOGR(here("data/BOTW/BOTW.gdb"))
 
 #-----------------------------
 # Wrangle the data a bit
@@ -212,6 +212,7 @@ for (i in x[z == TRUE]) {
   
 } # end loop
 
+write_csv(overlaps_bird, path = here("data/overlaps_bird.csv"))
 #-----------------------------
 # Mammals
 
@@ -279,7 +280,7 @@ for (i in x[z == TRUE]) {
   # Subset map data so we just have map for species i
   map_i <- subset(maps_amphibian, maps_amphibian$binomial == species_i)
   # Get intersection of map and hull
-  poly_overlap_i <- intersect(map_i, hull_poly_i)
+  poly_overlap_i <- raster::intersect(map_i, hull_poly_i)
   
   # Get areas
   hull_area <- sum(areaPolygon(hull_poly_i))
@@ -320,7 +321,7 @@ for (i in x[z == TRUE]) {
   # Subset map data so we just have map for species i
   map_i <- subset(maps_bird, maps_bird$binomial == species_i)
   # Get intersection of map and hull
-  poly_overlap_i <- intersect(map_i, hull_poly_i)
+  poly_overlap_i <- raster::intersect(map_i, hull_poly_i)
   
   # Get areas
   hull_area <- sum(areaPolygon(hull_poly_i))
@@ -361,7 +362,7 @@ for (i in x[z == TRUE]) {
   # Subset map data so we just have map for species i
   map_i <- subset(maps_mammal, maps_mammal$binomial == species_i)
   # Get intersection of map and hull
-  poly_overlap_i <- intersect(map_i, hull_poly_i)
+  poly_overlap_i <- raster::intersect(map_i, hull_poly_i)
   
   # Get areas
   hull_area <- sum(areaPolygon(hull_poly_i))
@@ -387,7 +388,7 @@ species_i <- as.character(unique(dsSPDF_amphibian@data$binomial)[i])
 hull_i <- hull_species_amphibian[[species_i]]
 hull_poly_i <- SpatialPolygons(list(Polygons(list(Polygon(hull_i)), ID=1)))
 map_i <- subset(maps_amphibian, maps_amphibian$binomial == species_i)
-poly_overlap_i <- intersect(map_i, hull_poly_i)
+poly_overlap_i <- raster::intersect(map_i, hull_poly_i)
 
 # Convert polygons so we can plot them in ggplot
 map_i2<- convert.spdf(map_i)
