@@ -1,0 +1,279 @@
+---
+title: "Overlaps models with GBIF data"
+author: "Natalie Cooper"
+date: "3/14/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This uses the overlaps data, plus region info and taxonomy from GBIF.
+
+```{r, echo = FALSE, message = FALSE}
+# Load libraries
+library(tidyverse)
+library(viridis)
+library(knitr)
+library(here)
+library(patchwork)
+library(ggfortify)
+library(broom)
+
+# Read in the overlaps data
+ds <- read_csv(here("data/gbif-overlaps.csv"))
+
+### Remember to delete duplicates if using region/continent not country ###
+continents <- 
+  ds %>%
+  dplyr::select(-country, -region, -countrycode) %>%
+  # Remove Peromyscus as it's a lot (1000+) higher than everything else.
+  filter(NumberOverlaps < 1000) %>% 
+  distinct()
+
+
+# Helper functions for plotting
+remove_y <- 
+  theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+```
+
+First a quick summary of how the data are spread across clades and continents...
+```{r}
+sum1 <- 
+ds %>%
+  dplyr::select(-country, -region, -countrycode) %>%
+  distinct() %>%
+  group_by(clade,continent) %>%
+  summarise(number = n())
+
+kable(sum1)
+```
+### Overlaps by clade
+Red dots are the mean with standard error bars, purple are medians, grey dots are the raw data.
+
+```{r, echo = FALSE, warning = FALSE}
+sum2 <- 
+  continents %>%
+  group_by(clade) %>%
+  summarise(mn = mean(PercentOverlaps),
+            med = median(PercentOverlaps),
+            se = sqrt((var(PercentOverlaps)/length(PercentOverlaps)))) 
+
+ggplot(continents, aes(x = clade, y = PercentOverlaps)) +
+  geom_point(alpha = 0.5, col = "grey", size = 0.5) +
+  geom_point(data = sum2, aes(y = mn), col = "red", size = 3) +
+  geom_point(data = sum2, aes(y = med), col = "purple", size = 3) +
+  geom_errorbar(data = sum2, aes(y = mn, ymin = mn - se, ymax = mn + se), width = 0.1) +
+  theme_bw(base_size = 14) +
+  xlab("")
+```
+
+### Overlaps by continent
+Red dots are the mean with standard error bars, median is purple, other coloured dots are the raw data.
+```{r, echo = FALSE, warning = FALSE}
+sum3 <- 
+  continents %>%
+  group_by(continent) %>%
+  summarise(mn = mean(PercentOverlaps),
+            se = sqrt(var(PercentOverlaps)/length(PercentOverlaps)),
+            med = median(PercentOverlaps))
+
+ggplot(continents, aes(x = continent, y = PercentOverlaps, col = clade)) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  geom_point(data = sum3, aes(y = mn, col = NULL), col = "red", size = 3) +
+  geom_point(data = sum3, aes(y = med, col = NULL), col = "purple", size = 3) +
+  geom_errorbar(data = sum3, aes(y = mn, ymin = mn - se, ymax = mn + se, col = NULL), width = 0.1) +
+  theme_bw(base_size = 14) +
+  xlab("") +
+  theme(legend.title = element_blank())
+
+```
+
+### Histograms of clade and continent spread of overlaps
+
+```{r, echo = FALSE, warning = FALSE}
+p1 <-
+ggplot(continents, aes(x = PercentOverlaps, fill = clade, col = clade)) +
+  geom_histogram(alpha = 0.5, bins = 10) +
+  theme_bw(base_size = 14) +
+  theme(legend.title = element_blank(),
+        legend.position = "left")
+
+p2 <-
+  ggplot(continents, aes(x = PercentOverlaps, fill = continent, col = continent)) +
+  geom_histogram(alpha = 0.5, bins = 10) +
+  theme_bw(base_size = 14) +
+  remove_y +
+  theme(legend.title = element_blank(),
+        legend.position = "right")
+
+p1 + p2
+```
+
+### Number of overlaps 
+
+```{r, echo = FALSE, warning = FALSE}
+p1 <-
+ggplot(continents, aes(x = NumberOverlaps, fill = clade, col = clade)) +
+  geom_histogram(alpha = 0.5, bins = 10) +
+  theme_bw(base_size = 14) +
+  theme(legend.title = element_blank(),
+        legend.position = "left")
+
+p2 <-
+  ggplot(continents, aes(x = NumberOverlaps, fill = continent, col = continent)) +
+  geom_histogram(alpha = 0.5, bins = 10) +
+  theme_bw(base_size = 14) +
+  remove_y +
+  theme(legend.title = element_blank(),
+        legend.position = "right")
+
+p1 + p2
+```
+
+### Number of specimens 
+
+```{r, echo = FALSE, warning = FALSE}
+p1 <-
+ggplot(continents, aes(x = NumberSpecimens, fill = clade, col = clade)) +
+  geom_histogram(alpha = 0.5, bins = 10) +
+  theme_bw(base_size = 14) +
+  theme(legend.title = element_blank(),
+        legend.position = "left")
+
+p2 <-
+  ggplot(continents, aes(x = NumberSpecimens, fill = continent, col = continent)) +
+  geom_histogram(alpha = 0.5, bins = 10) +
+  theme_bw(base_size = 14) +
+  remove_y +
+  theme(legend.title = element_blank(),
+        legend.position = "right")
+
+p1 + p2
+```
+
+### Is there are strong relationship between % overlap and number of specimens?
+
+```{r}
+ggplot(continents, aes(x = NumberSpecimens, y = PercentOverlaps, col = clade)) +
+  geom_point(alpha = 0.5) +
+  theme_bw(base_size = 14) +
+  theme(legend.title = element_blank(),
+        legend.position = "right")
+```
+
+
+### Models
+
+####1. By clade. GLM with quasibinomial errors. 
+Amphibians and mammals are different, but not amphibians and birds.
+
+```{r, echo = FALSE, warning = FALSE}
+ggplot(continents, aes(x = clade, y = NumberOverlaps)) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  theme_bw(base_size = 14) +
+  xlab("") +
+  theme(legend.title = element_blank())
+
+```
+
+```{r}
+# Fitting the model 
+model1 <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ clade,
+              data = continents[-1269, ], family = "binomial")
+# Check for overdispersion (should be < 2)
+sum_model1 <- summary(model1)
+sum_model1$deviance / sum_model1$df.resid 
+
+# Use quasibinomial model instead
+model1 <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ clade,
+              data = continents[-1269, ], family = "quasibinomial")
+
+# Look at model diagnostics
+autoplot(model1)
+
+# Look at outputs
+tidy(anova(model1, test = "F"))
+summary(model1)
+```
+
+####1A. By clade excluding amphibians. GLM with quasibinomial errors. 
+Birds and mammals differ.
+
+```{r}
+# Fitting the model 
+model1a <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ clade,
+              data = continents[continents$clade != "Amphibians", ], family = "binomial")
+# Check for overdispersion (should be < 2)
+sum_model1a <- summary(model1a)
+sum_model1a$deviance / sum_model1a$df.resid 
+
+# Use quasibinomial model instead
+model1a <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ clade,
+              data = continents[continents$clade != "Amphibians", ], family = "quasibinomial")
+
+# Look at model diagnostics
+autoplot(model1a)
+
+# Look at outputs
+tidy(anova(model1a, test = "F"))
+summary(model1a)
+```
+
+####2. By continent. GLM with quasibinomial errors. 
+Significant.
+
+```{r, echo = FALSE, warning = FALSE}
+ggplot(continents, aes(x = continent, y = NumberOverlaps, col = clade)) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  theme_bw(base_size = 14) +
+  xlab("") +
+  theme(legend.title = element_blank())
+```
+
+```{r}
+# Fitting the model 
+model2 <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ continent,
+              data = continents, family = "binomial")
+# Check for overdispersion (should be < 2)
+sum_model2 <- summary(model2)
+sum_model2$deviance / sum_model2$df.resid 
+
+# Use quasibinomial model instead
+model2 <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ continent,
+              data = continents, family = "quasibinomial")
+
+# Look at model diagnostics
+autoplot(model2)
+
+# Look at outputs
+tidy(anova(model2, test = "F"))
+summary(model2)
+```
+
+
+####2A. By continent jsut birds. GLM with quasibinomial errors. 
+Significant.
+
+```{r}
+# Fitting the model 
+model2a <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ continent,
+              data = continents[continents$clade == "Birds", ], family = "binomial")
+# Check for overdispersion (should be < 2)
+sum_model2a <- summary(model2a)
+sum_model2a$deviance / sum_model2a$df.resid 
+
+# Use quasibinomial model instead
+model2a <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ continent,
+              data = continents[continents$clade == "Birds", ], family = "quasibinomial")
+
+# Look at model diagnostics
+autoplot(model2a)
+
+# Look at outputs
+tidy(anova(model2a, test = "F"))
+summary(model2a)
+```
