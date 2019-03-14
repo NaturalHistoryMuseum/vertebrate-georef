@@ -41,7 +41,7 @@ remove_y <-
 ```
 
 First a quick summary of how the data are spread across clades and continents...
-```{r}
+```{r, echo = FALSE}
 sum1 <- 
 ds %>%
   dplyr::select(-country, -region, -countrycode) %>%
@@ -51,6 +51,7 @@ ds %>%
 
 kable(sum1)
 ```
+
 ### Overlaps by clade
 Red dots are the mean with standard error bars, purple are medians, grey dots are the raw data.
 
@@ -92,7 +93,7 @@ ggplot(continents, aes(x = continent, y = PercentOverlaps, col = clade)) +
 
 ```
 
-### Histograms of clade and continent spread of overlaps
+### Percent overlaps
 
 ```{r, echo = FALSE, warning = FALSE}
 p1 <-
