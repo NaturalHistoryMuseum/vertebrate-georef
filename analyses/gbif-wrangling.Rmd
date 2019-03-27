@@ -106,13 +106,36 @@ write_csv(gbif2, path = here("data/tidy-gbif.csv"))
 
 ## What data are available in GBIF?
 
+Specimens per clade
 ```{r, echo = FALSE}
 sum_clade <- gbif2 %>%
      group_by(clade) %>%
-     summarise(n = n())
+     distinct() %>%
+     summarise(no.specimens = n()) 
 
 kable(sum_clade)
 ```
+
+Total specimens
+```{r}
+sum(sum_clade$no.specimens)
+```
+
+Species per clade
+```{r, echo = FALSE}
+sum_clade <- gbif2 %>%
+     group_by(clade) %>%
+     distinct() %>%
+     summarise(no.species = length(unique(binomial))) 
+
+kable(sum_clade)
+```
+
+Total species
+```{r}
+sum(sum_clade$no.species)
+```
+
 
 What about with more than 3 specimens?
 ```{r, echo = FALSE}
