@@ -30,6 +30,7 @@ continents <-
   dplyr::select(-country, -region, -countrycode) %>%
   # Remove Peromyscus as it's a lot (1000+) higher than everything else.
   filter(NumberOverlaps < 1000) %>% 
+  filter(clade != "Amphibians") %>%
   distinct()
 
 # Helper functions for plotting
@@ -44,7 +45,6 @@ First a quick summary of how the data are spread across clades and continents...
 sum1 <- 
 ds %>%
   dplyr::select(-country, -region, -countrycode) %>%
-  filter(clade != "Amphibians") %>%
   distinct() %>%
   group_by(clade, continent) %>%
   summarise(number = n())
