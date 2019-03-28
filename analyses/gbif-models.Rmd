@@ -70,7 +70,9 @@ ggplot(continents, aes(x = clade, y = PercentOverlaps)) +
   geom_errorbar(data = sum2, aes(y = mn, ymin = mn - se, ymax = mn + se), width = 0.1) +
   theme_bw(base_size = 14) +
   xlab("")
+```
 
+```{r}
 sum2
 ```
 
@@ -92,9 +94,10 @@ ggplot(continents, aes(x = continent, y = PercentOverlaps, col = clade)) +
   theme_bw(base_size = 14) +
   xlab("") +
   theme(legend.title = element_blank())
+```
 
+```{r}
 sum3
-
 ```
 
 ### Percent overlaps
@@ -260,7 +263,7 @@ summary(model2)
 ```
 
 
-####2A. By continent jsut birds. GLM with quasibinomial errors. 
+####2A. By continent just birds. GLM with quasibinomial errors. 
 Significant.
 
 ```{r}
