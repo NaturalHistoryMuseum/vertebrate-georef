@@ -1,5 +1,5 @@
 ---
-title: "Overlaps models with GBIF data"
+title: "Overlaps models with GBIF data for birds and mammals"
 author: "Natalie Cooper"
 date: "3/14/2019"
 output: html_document
@@ -32,7 +32,6 @@ continents <-
   filter(NumberOverlaps < 1000) %>% 
   distinct()
 
-
 # Helper functions for plotting
 remove_y <- 
   theme(axis.title.y=element_blank(),
@@ -45,8 +44,9 @@ First a quick summary of how the data are spread across clades and continents...
 sum1 <- 
 ds %>%
   dplyr::select(-country, -region, -countrycode) %>%
+  filter(clade != "Amphibians") %>%
   distinct() %>%
-  group_by(clade,continent) %>%
+  group_by(clade, continent) %>%
   summarise(number = n())
 
 kable(sum1)
@@ -285,3 +285,10 @@ autoplot(model2a)
 tidy(anova(model2a, test = "F"))
 summary(model2a)
 ```
+
+### What about body size?
+
+```{r}
+# Read in data
+
+
