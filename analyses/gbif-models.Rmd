@@ -47,6 +47,7 @@ ds %>%
   dplyr::select(-country, -region, -countrycode) %>%
   distinct() %>%
   group_by(clade, continent) %>%
+  filter(clade != "Amphibians") %>%
   summarise(number = n())
 
 kable(sum1)
@@ -61,7 +62,8 @@ sum2 <-
   group_by(clade) %>%
   summarise(mn = mean(PercentOverlaps),
             med = median(PercentOverlaps),
-            se = sqrt((var(PercentOverlaps)/length(PercentOverlaps)))) 
+            se = sqrt((var(PercentOverlaps)/length(PercentOverlaps))),
+            totalo = sum(NumberOverlaps)/sum(NumberSpecimens)) 
 
 ggplot(continents, aes(x = clade, y = PercentOverlaps)) +
   geom_point(alpha = 0.5, col = "grey", size = 0.5) +
@@ -177,7 +179,6 @@ ggplot(continents, aes(x = NumberSpecimens, y = PercentOverlaps, col = clade)) +
 ### Models
 
 ####1. By clade. GLM with quasibinomial errors. 
-Amphibians and mammals are different, but not amphibians and birds.
 
 ```{r, echo = FALSE, warning = FALSE}
 ggplot(continents, aes(x = clade, y = NumberOverlaps)) +
@@ -191,14 +192,14 @@ ggplot(continents, aes(x = clade, y = NumberOverlaps)) +
 ```{r}
 # Fitting the model 
 model1 <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ clade,
-              data = continents[-1269, ], family = "binomial")
+              data = continents, family = "binomial")
 # Check for overdispersion (should be < 2)
 sum_model1 <- summary(model1)
 sum_model1$deviance / sum_model1$df.resid 
 
 # Use quasibinomial model instead
 model1 <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ clade,
-              data = continents[-1269, ], family = "quasibinomial")
+              data = continents, family = "quasibinomial")
 
 # Look at model diagnostics
 autoplot(model1)
@@ -206,29 +207,6 @@ autoplot(model1)
 # Look at outputs
 tidy(anova(model1, test = "F"))
 summary(model1)
-```
-
-####1A. By clade excluding amphibians. GLM with quasibinomial errors. 
-Birds and mammals differ.
-
-```{r}
-# Fitting the model 
-model1a <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ clade,
-              data = continents[continents$clade != "Amphibians", ], family = "binomial")
-# Check for overdispersion (should be < 2)
-sum_model1a <- summary(model1a)
-sum_model1a$deviance / sum_model1a$df.resid 
-
-# Use quasibinomial model instead
-model1a <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ clade,
-              data = continents[continents$clade != "Amphibians", ], family = "quasibinomial")
-
-# Look at model diagnostics
-autoplot(model1a)
-
-# Look at outputs
-tidy(anova(model1a, test = "F"))
-summary(model1a)
 ```
 
 ####2. By continent. GLM with quasibinomial errors. 
@@ -262,33 +240,53 @@ tidy(anova(model2, test = "F"))
 summary(model2)
 ```
 
-
-####2A. By continent just birds. GLM with quasibinomial errors. 
-Significant.
-
-```{r}
-# Fitting the model 
-model2a <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ continent,
-              data = continents[continents$clade == "Birds", ], family = "binomial")
-# Check for overdispersion (should be < 2)
-sum_model2a <- summary(model2a)
-sum_model2a$deviance / sum_model2a$df.resid 
-
-# Use quasibinomial model instead
-model2a <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ continent,
-              data = continents[continents$clade == "Birds", ], family = "quasibinomial")
-
-# Look at model diagnostics
-autoplot(model2a)
-
-# Look at outputs
-tidy(anova(model2a, test = "F"))
-summary(model2a)
-```
-
 ### What about body size?
 
 ```{r}
-# Read in data
+# Read in data and select required columns then rename for joins
+mam <- read_delim(here("data/MamFuncDat.txt"), delim = "\t")
 
+mam <-
+  mam %>%
+  rename(Binomial = Scientific) %>%
+  dplyr::select(Binomial, 'BodyMass-Value')
 
+bird <- read_delim(here("data/BirdFuncDat.txt"), delim = "\t")
+
+bird <-
+  bird %>%
+  rename(Binomial = Scientific) %>%
+  dplyr::select(Binomial, 'BodyMass-Value')
+
+bm <- rbind(bird, mam)
+
+continents2 <- left_join(continents, bm) %>%
+  rename(bodymass = 'BodyMass-Value')
+```
+
+```{r, echo = FALSE, warning = FALSE}
+ggplot(continents2, aes(x = log(bodymass), y = NumberOverlaps, col = clade)) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  theme_bw(base_size = 14) +
+  theme(legend.title = element_blank()) 
+```
+
+```{r}
+# Fitting the model 
+model3 <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ log(bodymass)*clade,
+              data = continents2, family = "binomial")
+# Check for overdispersion (should be < 2)
+sum_model3 <- summary(model3)
+sum_model3$deviance / sum_model3$df.resid 
+
+# Use quasibinomial model instead
+model3 <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ log(bodymass)*clade,
+              data = continents2, family = "quasibinomial")
+
+# Look at model diagnostics
+autoplot(model3)
+
+# Look at outputs
+tidy(anova(model3, test = "F"))
+summary(model3)
+```
