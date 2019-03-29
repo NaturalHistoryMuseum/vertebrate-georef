@@ -44,7 +44,7 @@ convert.spdf <- function(map) {
 ```
 
 First we need to wrangle the GBIF data so only specimens with lat longs and full species names are included, we also add a "clade" variable to deal with fishes being in different classes.
-```{r, echo = FALSE, message = FALSE, warning = FALSE}
+```{r, echo = FALSE, message = FALSE, warning = FALSE, error = FALSE}
 # Read in the GBIF data
 gbif <- read_csv(here("data/all-gbif.csv"))
 
@@ -217,6 +217,7 @@ ggplot(data = world, aes(x = long, y = lat, group = group)) +
   theme_void() +
   theme(legend.position = "none")
 ```
+
 
 And for all the non birds
 ```{r, echo = FALSE}

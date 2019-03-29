@@ -1,0 +1,229 @@
+---
+title: "Sampling biases"
+author: "Natalie Cooper"
+date: "3/28/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE, message = FALSE}
+# Load libraries
+library(tidyverse)
+library(viridis)
+library(knitr)
+library(here)
+library(patchwork)
+library(ggfortify)
+library(broom)
+
+# Helper functions for plotting
+remove_y <- 
+  theme(axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+```
+
+```{r}
+sumd <- read_csv(here("data/sumary-data.csv")) 
+
+bar <- 
+sumd %>%
+  gather(key = collection, value = number, -Species, -Clade) %>%
+  mutate(percent = (number/Species) * 100) 
+  
+ggplot(bar, aes(x = Clade, y = percent, fill = collection)) +
+  geom_bar(stat = 'identity', position = position_dodge()) +
+  theme_bw(base_size = 14) +
+  theme(legend.position = c(0.15, 0.85),
+        legend.title = element_blank()) +
+  xlab("") +
+  ylab("% of total species") +
+  scale_fill_manual(values = c(viridis(3)))
+
+ggsave("percent-species-in-gbif.png", width = 4, height = 4)
+```
+
+
+70,689
+56,526
+(2,945)
+107,747
+(29,630)
+
+
+
+
+```{r}
+# Read in the overlaps data
+ds <- read_csv(here("data/tidy-gbif.csv"))
+```
+
+```{r}
+# Add region/continent data
+#### Note that some don't have this data so we lose a few species/specimens in the overall counts.
+
+# Read in full gbif dataset
+gbif <- read_csv(here("data/all-gbif.csv"))
+
+# Wrangle to just taxonomy and country codes
+gbif2 <-   
+  
+  gbif %>%
+  
+  # Check that all included records are specimens not observations
+  filter(basisofrecord == "PRESERVED_SPECIMEN") %>%
+  
+  # Remove post 1900 records and those with no year
+  filter(year < 1901 & !is.na(year))  %>%
+
+  # Add clade column, remove sea squirts and make a "fishes" "clade"
+  filter(class != "Ascidiacea" & class != "Thaliacea" & !is.na(class)) %>%
+  mutate(clade = class) %>%
+  mutate(clade = if_else(clade == "Amphibia", "Amphibians", clade)) %>%
+  mutate(clade = if_else(clade == "Reptilia", "Reptiles", clade)) %>%
+  mutate(clade = if_else(clade == "Aves", "Birds", clade)) %>%
+  mutate(clade = if_else(clade == "Mammalia", "Mammals", clade)) %>%
+  mutate(clade = if_else(clade == "Actinopterygii", "Fishes", clade)) %>%
+  mutate(clade = if_else(clade == "Cephalaspidomorphi", "Fishes", clade)) %>%
+  mutate(clade = if_else(clade == "Elasmobranchii", "Fishes", clade)) %>%
+  mutate(clade = if_else(clade == "Leptocardii", "Fishes", clade)) %>%
+
+  # Remove records with no lat/long
+  filter(!is.na(decimallatitude) & !is.na(decimallongitude)) %>%
+  
+  # TAXONOMY (note there is a second set of checks later)
+  # 1. Remove entries where we only have the Genus
+  # 2. Create binomial column
+  separate(species, c("Genus", "Species"), sep = " ", 
+           extra = "drop", fill = "right") %>%
+    filter(!is.na(Species) & Species != "sp." & Species != "sp") %>%
+    unite("binomial", Genus, Species, sep = " ") %>%
+
+  # Select just the columns of interest
+  dplyr::select(binomial, clade, countrycode) %>%
+  
+  # Remove duplicates
+  distinct()
+
+# Join with overlaps data
+q <- full_join(ds, gbif2)
+
+# Read in country code data and join
+# Remove column with no data (X5)
+# Remove the ones with no continent listed (all birds, not sure why)
+codes <- read_csv(here("data/country-codes.csv"))
+qq <- q %>%
+  left_join(codes, by = c("countrycode" = "code")) %>%
+  dplyr::select(-X5) %>%
+  filter(!is.na(clade))
+```
+
+How many specimens in each continent?
+
+```{r}
+qq %>%
+  dplyr::select(-country, -region, -countrycode) %>%
+  distinct() %>%
+  group_by(clade,continent) %>%
+  summarise(n())
+```
+
+How many species in each continent?
+
+```{r}
+qq2 <- 
+qq %>%
+  dplyr::select(-country, -region, -countrycode) %>%
+  distinct() %>%
+  group_by(clade, continent) %>%
+  summarise(no.species = length(unique(binomial))) %>%
+  mutate(gbif = "GBIF")
+
+qq2
+```
+
+```{r}
+# Read in comparison data
+xx <- read_csv(here("data/most-species.csv"))
+
+xx2 <- 
+xx %>%
+  dplyr::select(-Country) %>%
+  gather(clade, species, Birds:Fish) %>%
+  group_by(Continent, clade) %>%
+  summarise(no.species = sum(species)) %>%
+  rename(continent = Continent) %>%
+  mutate(clade = str_replace(clade, "Fish", "Fishes")) %>%
+  mutate(gbif = "NonGBIF")
+
+xx2
+
+# Combine the two
+all <- 
+  rbind(qq2, xx2) %>%
+  filter(!is.na(continent))
+
+# Plot
+ggplot(all, aes(x = continent, y = log(no.species), fill = gbif)) +
+  geom_bar(stat = 'identity', position = position_dodge()) +
+  theme_bw(base_size = 14) +
+  facet_wrap(~ clade) +
+  theme(legend.position = c(0.85, 0.1),
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        strip.background = element_rect(fill = "white")) +
+  xlab("") +
+  ylab("log # species") +
+  scale_fill_manual(values = c(viridis(4)), 
+                    labels = c("GBIF", "Total"))
+
+ggsave("continents-gbif.png", width = 6, height = 4)
+```
+
+
+### Body size biases
+```{r}
+# Read in body size data
+# Read in data and select required columns then rename for joins
+mam <- read_delim(here("data/MamFuncDat.txt"), delim = "\t")
+
+mam <-
+  mam %>%
+  rename(binomial = Scientific) %>%
+  dplyr::select(binomial, 'BodyMass-Value') %>%
+  mutate(clade = "Mammals")
+
+bird <- read_delim(here("data/BirdFuncDat.txt"), delim = "\t")
+
+bird <-
+  bird %>%
+  rename(binomial = Scientific) %>%
+  dplyr::select(binomial, 'BodyMass-Value') %>%
+  mutate(clade = "Birds")
+
+bm <- rbind(bird, mam)
+
+# Remove specimen info from full dataset abd add GBIF or not column
+ds2 <- ds %>%
+       select(binomial, clade) %>%
+       filter(clade == "Mammals" | clade == "Birds") %>%
+       distinct() %>%
+       mutate(gbif = "GBIF")
+
+# Merge
+bmgbif <- 
+  full_join(ds2, bm, by = c("binomial", "clade")) %>%
+  rename(bodymass = 'BodyMass-Value') %>%
+  mutate(gbif = if_else(is.na(gbif), "Non GBIF", gbif))
+
+# Plot 
+ggplot(bmgbif, aes(x = log(bodymass), fill = gbif)) +
+  geom_density(alpha = 0.4) +
+  facet_wrap( ~ clade + gbif) +
+  theme_bw(base_size = 14)
+
+```
+
