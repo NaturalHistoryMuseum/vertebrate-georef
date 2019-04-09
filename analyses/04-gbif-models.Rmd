@@ -290,3 +290,81 @@ autoplot(model3)
 tidy(anova(model3, test = "F"))
 summary(model3)
 ```
+
+# IUCN Red List status
+
+```{r, echo = FALSE, warning = FALSE}
+# Read in iucn data and merge
+iucn <- read_csv(here("data/IUCN-data.csv"))
+all <- 
+  continents %>%
+  left_join(iucn, by = c("Binomial" = "scientific_name")) %>%
+  mutate(category = factor(category, levels = c("LC", "NT", "VU", "EN", "CR", "EX", "DD"))) %>%
+  filter(!is.na(category))
+```
+
+### Overlaps by IUCN status
+Red dots are the mean with standard error bars, median is purple, other coloured dots are the raw data.
+```{r, echo = FALSE, warning = FALSE}
+sum4 <- 
+  all %>%
+  group_by(category) %>%
+  summarise(mn = mean(PercentOverlaps),
+            se = sqrt(var(PercentOverlaps)/length(PercentOverlaps)),
+            med = median(PercentOverlaps),
+            n())
+
+ggplot(all, aes(x = category, y = PercentOverlaps, col = clade)) +
+  geom_point(alpha = 0.5, size = 0.5) +
+  geom_point(data = sum4, aes(y = mn, col = NULL), col = "red", size = 3) +
+  geom_point(data = sum4, aes(y = med, col = NULL), col = "purple", size = 3) +
+  geom_errorbar(data = sum4, aes(y = mn, ymin = mn - se, ymax = mn + se, col = NULL), width = 0.1) +
+  theme_bw(base_size = 14) +
+  xlab("") +
+  theme(legend.title = element_blank())
+```
+
+```{r}
+sum4
+```
+```{r}
+  ggplot(all, aes(x = PercentOverlaps, fill = category, col = category)) +
+  geom_histogram(alpha = 0.5, bins = 10) +
+  theme_bw(base_size = 14) +
+  remove_y +
+  theme(legend.title = element_blank(),
+        legend.position = "right")
+```
+
+
+# Models 
+
+```{r}
+# Fitting the model 
+model4 <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ category*clade,
+              data = all, family = "binomial")
+# Check for overdispersion (should be < 2)
+sum_model4 <- summary(model4)
+sum_model4$deviance / sum_model4$df.resid 
+
+# Use quasibinomial model instead
+model4 <- glm(cbind(NumberOverlaps, (NumberSpecimens - NumberOverlaps)) ~ category,
+              data = all, family = "quasibinomial")
+
+# Look at model diagnostics
+autoplot(model4)
+
+# Look at outputs
+tidy(anova(model4, test = "F"))
+summary(model4)
+```
+
+
+
+
+```{r}
+anova(model4, test = 'Chisq')
+```
+
+
+
