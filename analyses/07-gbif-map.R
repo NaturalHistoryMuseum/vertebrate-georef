@@ -33,10 +33,10 @@ glimpse(gbif)
 # Extract map and plot
 worldmap <- map_data("world")
 ggplot(data = worldmap, aes(x = long, y = lat, group = group)) + 
-  geom_polygon(fill = "#F2F2F2", col = "#F2F2F2", size = 0.5) +
+  geom_polygon(fill = "#dddddd", col = "#dddddd", size = 0.5) +
   # Add points with colour as clade
   geom_point(data = gbif, aes(x = decimallongitude, y = decimallatitude, 
-                              group = NA, colour = clade), size = 0.25, alpha = 0.8, pch = 16) +
+                              group = NA, colour = clade), size = 0.4, alpha = 0.8, pch = 16) +
   scale_colour_manual(values = c(viridis(5))) +
   theme_void() +
   # Legend manipulations
